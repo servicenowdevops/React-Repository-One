@@ -1,0 +1,253 @@
+# This workflow uses ServiceNow custom actions that are certified by ServiceNow.
+
+name: 20 Dummy Jobs - React Repository One 3
+
+on:
+  push:
+    branches: [ "master" ]
+  pull_request:
+    branches: [ "master" ]
+    types: [opened, synchronize, reopened]
+
+jobs:
+  build1:
+    runs-on: self-hosted
+    name: Build1
+    steps:
+      - uses: actions/checkout@v3
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{ 14 }}
+      - run: npm install
+
+  build2:
+    #needs: build1
+    runs-on: self-hosted
+    name: Build2
+    steps:
+      - uses: actions/checkout@v3
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{ 14 }}
+      - run: npm install
+
+  build3:
+    #needs: build2
+    runs-on: self-hosted
+    name: Build3
+    steps:
+      - uses: actions/checkout@v3
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{ 14 }}
+      - run: npm install
+
+  build4:
+    #needs: build3
+    runs-on: self-hosted
+    name: Build4
+    steps:
+      - uses: actions/checkout@v3
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{ 14 }}
+      - run: npm install
+
+  build5:
+    #needs: build4
+    runs-on: self-hosted
+    name: Build5
+    steps:
+      - uses: actions/checkout@v3
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{ 14 }}
+      - run: npm install
+
+  build6:
+    #needs: build5
+    runs-on: self-hosted
+    name: Build6
+    steps:
+      - uses: actions/checkout@v3
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{ 14 }}
+      - run: npm install
+
+  build7:
+    #needs: build6
+    runs-on: self-hosted
+    name: Build7
+    steps:
+      - uses: actions/checkout@v3
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{ 14 }}
+      - run: npm install
+
+  build8:
+    #needs: build7
+    runs-on: self-hosted
+    name: Build8
+    steps:
+      - uses: actions/checkout@v3
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{ 14 }}
+      - run: npm install
+
+  build9:
+    #needs: build8
+    runs-on: self-hosted
+    name: Build9
+    steps:
+      - uses: actions/checkout@v3
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{ 14 }}
+      - run: npm install
+
+  build10:
+    #needs: build9
+    runs-on: self-hosted
+    name: Build10
+    steps:
+      - uses: actions/checkout@v3
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{ 14 }}
+      - run: npm install
+
+  build11:
+    #needs: build10
+    runs-on: self-hosted
+    name: Build11
+    steps:
+      - uses: actions/checkout@v3
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{ 14 }}
+      - run: npm install
+
+  build12:
+    #needs: build11
+    runs-on: self-hosted
+    name: Build12
+    steps:
+      - uses: actions/checkout@v3
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{ 14 }}
+      - run: npm install
+
+  build13:
+    #needs: build12
+    runs-on: self-hosted
+    name: Build13
+    steps:
+      - uses: actions/checkout@v3
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{ 14 }}
+      - run: npm install
+
+  build14:
+    #needs: build13
+    runs-on: self-hosted
+    name: Build14
+    steps:
+      - uses: actions/checkout@v3
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{ 14 }}
+      - run: npm install
+
+  build15:
+    #needs: build14
+    runs-on: self-hosted
+    name: Build15
+    steps:
+      - uses: actions/checkout@v3
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{ 14 }}
+      - run: npm install
+
+  build16:
+    #needs: build15
+    runs-on: self-hosted
+    name: Build16
+    steps:
+      - uses: actions/checkout@v3
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{ 14 }}
+      - run: npm install
+
+  build17:
+    #needs: build16
+    runs-on: self-hosted
+    name: Build17
+    steps:
+      - uses: actions/checkout@v3
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{ 14 }}
+      - run: npm install
+
+  build18:
+    #needs: build17
+    runs-on: self-hosted
+    name: Build18
+    steps:
+      - uses: actions/checkout@v3
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{ 14 }}
+      - run: npm install
+
+  build19:
+    #needs: build18
+    runs-on: self-hosted
+    name: Build19
+    steps:
+      - uses: actions/checkout@v3
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{ 14 }}
+      - run: npm install
+
+  build20:
+    #needs: build19
+    runs-on: self-hosted
+    name: Build20
+    steps:
+      - uses: actions/checkout@v3
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{ 14 }}
+      - run: npm install
+
+
+    
