@@ -5,8 +5,6 @@ name: 20 Dummy Jobs - React Repository One 3
 on:
   # push:
   #   branches: [ "master" ]
-  schedule:
-    - cron:  '*/15 * * * *'    # At every 15th minute
   pull_request:
     branches: [ "master" ]
     types: [opened, synchronize, reopened]
