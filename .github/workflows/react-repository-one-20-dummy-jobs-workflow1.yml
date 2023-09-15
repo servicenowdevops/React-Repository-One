@@ -1,6 +1,6 @@
 # This workflow uses ServiceNow custom actions that are certified by ServiceNow.
 
-name: CICD GitHub workflow
+name: 20 Dummy Jobs - React Repository One
 
 on:
   push:
@@ -13,10 +13,13 @@ jobs:
   build:
     runs-on: ubuntu-latest
     name: Setup Node.js environment
+    strategy:
+      matrix:
+        node-version: [14.x, 16.x, 18.x, 20.x]
     steps:
       - uses: actions/checkout@v3
-      - name: Run linting rules and tests
+      - name: Use Node.js ${{ matrix.node-version }}
         uses: actions/setup-node@v3
         with:
-          node-version: ${{ 14 }}
-      - run: npm run install
+          node-version: ${{ matrix.node-version }}
+      - run: npm ci
