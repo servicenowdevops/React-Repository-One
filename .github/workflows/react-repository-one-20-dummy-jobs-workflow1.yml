@@ -13,9 +13,6 @@ jobs:
   build1:
     runs-on: ubuntu-latest
     name: Build1
-    strategy:
-      matrix:
-        node-version: [14.x, 16.x, 18.x, 20.x]
     steps:
       - uses: actions/checkout@v3
       - name: Use Node.js ${{ matrix.node-version }}
@@ -27,9 +24,6 @@ jobs:
   build2:
     runs-on: ubuntu-latest
     name: Build2
-    strategy:
-      matrix:
-        node-version: [14.x, 16.x, 18.x, 20.x]
     steps:
       - uses: actions/checkout@v3
       - name: Use Node.js ${{ matrix.node-version }}
