@@ -1,13 +1,12 @@
-# This workflow will build a Java project with Maven, and cache/restore any dependencies to improve the workflow execution time
-# For more information see: https://help.github.com/actions/language-and-framework-guides/building-and-testing-java-with-maven
+# This workflow uses ServiceNow custom actions that are certified by ServiceNow.
 
-name: 20 Dummy Jobs - React Repository One
+name: CICD GitHub workflow
 
 on:
   push:
-    branches: [ master ]
+    branches: [ "master" ]
   pull_request:
-    branches: [ master ]
+    branches: [ "master" ]
     types: [opened, synchronize, reopened]
 
 jobs:
@@ -23,544 +22,252 @@ jobs:
         java-version: '17'
         distribution: 'temurin'
         cache: maven
+    - name: Build with Maven
+      run: mvn clean compile
 
-    build1:
-        name: 'Build1'
-        runs-on: ubuntu-latest
-        steps:           
-            - uses: actions/checkout@v2
-              with:
-                  fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of analysis
-            
-            - name: Set up JDK 11
-              uses: actions/setup-java@v1
-              with:
-                  java-version: 11
-            
-            - name: Cache SonarCloud packages
-              uses: actions/cache@v1
-              with:
-                  path: ~/.sonar/cache
-                  key: ${{ runner.os }}-sonar
-                  restore-keys: ${{ runner.os }}-sonar
-            
-            - name: Cache Maven packages
-              uses: actions/cache@v1
-              with:
-                  path: ~/.m2
-                  key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
-                  restore-keys: ${{ runner.os }}-m2
-    build2:
-        name: 'Build2'
-        runs-on: ubuntu-latest
-        steps:           
-            - uses: actions/checkout@v2
-              with:
-                  fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of analysis
-            
-            - name: Set up JDK 11
-              uses: actions/setup-java@v1
-              with:
-                  java-version: 11
-            
-            - name: Cache SonarCloud packages
-              uses: actions/cache@v1
-              with:
-                  path: ~/.sonar/cache
-                  key: ${{ runner.os }}-sonar
-                  restore-keys: ${{ runner.os }}-sonar
-            
-            - name: Cache Maven packages
-              uses: actions/cache@v1
-              with:
-                  path: ~/.m2
-                  key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
-                  restore-keys: ${{ runner.os }}-m2
+  test:
+    name: 'Test'
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4.0.0
+      with:
+        # Repository name with owner. For example, actions/checkout
+        repository: # optional, default is ${{ github.repository }}
+        
+    - name: Run Tests with Maven
+      run: mvn -B test --file pom.xml
 
-    build3:
-        name: 'Build3'
-        runs-on: ubuntu-latest
-        steps:           
-            - uses: actions/checkout@v2
-              with:
-                  fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of analysis
-            
-            - name: Set up JDK 11
-              uses: actions/setup-java@v1
-              with:
-                  java-version: 11
-            
-            - name: Cache SonarCloud packages
-              uses: actions/cache@v1
-              with:
-                  path: ~/.sonar/cache
-                  key: ${{ runner.os }}-sonar
-                  restore-keys: ${{ runner.os }}-sonar
-            
-            - name: Cache Maven packages
-              uses: actions/cache@v1
-              with:
-                  path: ~/.m2
-                  key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
-                  restore-keys: ${{ runner.os }}-m2
+    - name: ServiceNow DevOps Unit Test Results
+    # You may pin to the exact commit or the version.
+      uses: ServiceNow/servicenow-devops-test-report@v2.0.0
+      with:
+          # Devops Integration User Name
+          devops-integration-user-name: ${{ secrets.SN_DEVOPS_USER }}
+          # Devops Integration User Password
+          devops-integration-user-password: ${{ secrets.SN_DEVOPS_PASSWORD }}
+          # ServiceNow Instance Name
+          instance-url: ${{ secrets.SN_INSTANCE_URL }}
+          # Orchestration Tool Id
+          tool-id: ${{ secrets.SN_ORCHESTRATION_TOOL_ID }}
+          # Job Name
+          job-name: 'Test' # Should be same name as declared in 'name' clause of the current Stage
+          # Github Context
+          context-github: ${{ toJSON(github) }}
+          # JUnit xml report file name with path
+          xml-report-filename: target/surefire-reports/testng-results.xml # if only JUnit tests, use target/surefire-reports/testng-results.xml
+                                                                          # if both JUnit & TestNG tests, use target/surefire-reports/testng-junit-results/testng-results.xml
+          # GitHub Custom Action
+          test-type: # optional, default is JUnit
 
-    build4:
-        name: 'Build4'
-        runs-on: ubuntu-latest
-        steps:           
-            - uses: actions/checkout@v2
-              with:
-                  fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of analysis
-            
-            - name: Set up JDK 11
-              uses: actions/setup-java@v1
-              with:
-                  java-version: 11
-            
-            - name: Cache SonarCloud packages
-              uses: actions/cache@v1
-              with:
-                  path: ~/.sonar/cache
-                  key: ${{ runner.os }}-sonar
-                  restore-keys: ${{ runner.os }}-sonar
-            
-            - name: Cache Maven packages
-              uses: actions/cache@v1
-              with:
-                  path: ~/.m2
-                  key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
-                  restore-keys: ${{ runner.os }}-m2
+  registerArtifact:
+    name: 'Register Artifact'
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+    - name: ServiceNow DevOps Register Artifact
+    # You may pin to the exact commit or the version.          
+      uses: ServiceNow/servicenow-devops-register-artifact@v2.0.0
+      with:
+          # Devops Integration User Name
+          devops-integration-user-name: ${{ secrets.SN_DEVOPS_USER }}
+          # Devops Integration User Password
+          devops-integration-user-password: ${{ secrets.SN_DEVOPS_PASSWORD }}
+          # ServiceNow Instance URL
+          instance-url: ${{ secrets.SN_INSTANCE_URL }}
+          # Orchestration Tool Id
+          tool-id: ${{ secrets.SN_ORCHESTRATION_TOOL_ID }}
+          # Display Name of the Job
+          job-name: 'Register Artifact'
+          # Github Context
+          context-github: ${{ toJSON(github) }}
+          # List of Artifacts to be registered
+          artifacts: '[
+              {
+                  "name": "app-devops.jar",
+                  "version": "1.${{ github.run_number }}",
+                  "semanticVersion": "1.${{ github.run_number }}.0",
+                  "repositoryName": "${{ github.repository }}"
+              }
+          ]'
 
-     build5:
-        name: 'Build5'
-        runs-on: ubuntu-latest
-        steps:           
-            - uses: actions/checkout@v2
-              with:
-                  fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of analysis
-            
-            - name: Set up JDK 11
-              uses: actions/setup-java@v1
-              with:
-                  java-version: 11
-            
-            - name: Cache SonarCloud packages
-              uses: actions/cache@v1
-              with:
-                  path: ~/.sonar/cache
-                  key: ${{ runner.os }}-sonar
-                  restore-keys: ${{ runner.os }}-sonar
-            
-            - name: Cache Maven packages
-              uses: actions/cache@v1
-              with:
-                  path: ~/.m2
-                  key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
-                  restore-keys: ${{ runner.os }}-m2
+  sonarScan:
+    name: 'Sonar Scan'
+    needs: registerArtifact
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4.0.0
+      with:
+        # Repository name with owner. For example, actions/checkout
+        repository: # optional, default is ${{ github.repository }}
 
-     build6:
-        name: 'Build6'
-        runs-on: ubuntu-latest
-        steps:           
-            - uses: actions/checkout@v2
-              with:
-                  fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of analysis
-            
-            - name: Set up JDK 11
-              uses: actions/setup-java@v1
-              with:
-                  java-version: 11
-            
-            - name: Cache SonarCloud packages
-              uses: actions/cache@v1
-              with:
-                  path: ~/.sonar/cache
-                  key: ${{ runner.os }}-sonar
-                  restore-keys: ${{ runner.os }}-sonar
-            
-            - name: Cache Maven packages
-              uses: actions/cache@v1
-              with:
-                  path: ~/.m2
-                  key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
-                  restore-keys: ${{ runner.os }}-m2
+    # uncomment below lines of code to trigger a new Sonar scan        
+    # - name: Sonar Cloud Analysis
+    #   if: success() # always() failure() success()
+    #   run: >
+    #       mvn -B verify -DskipTests sonar:sonar
+    #       -Dsonar.projectKey=$SONAR_PROJECT_KEY
+    #       -Dsonar.organization=$SONAR_ORG_KEY
+    #       -Dsonar.host.url=$SONAR_URL
+    #       -Dsonar.login=$SONAR_TOKEN
+    #   env:
+    #       GITHUB_TOKEN: ${{ secrets.GHP_TOKEN }}
+    #       SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+    #       SONAR_PROJECT_KEY: ${{ secrets.SONAR_PROJECT_KEY }}
+    #       SONAR_URL: ${{ secrets.SONAR_URL }}
+    #       SONAR_ORG_KEY: ${{ secrets.SONAR_ORG_KEY }}
+    
+    - name: ServiceNow DevOps Sonar Scan Results
+    # You may pin to the exact commit or the version.     
+      uses: ServiceNow/servicenow-devops-sonar@v2.0.0
+      with:
+          # ServiceNow Instance URL
+          instance-url: ${{ secrets.SN_INSTANCE_URL }}
+          # Devops Integration User Name
+          devops-integration-user-name: ${{ secrets.SN_DEVOPS_USER }}
+          # Devops Integration User Password
+          devops-integration-user-password: ${{ secrets.SN_DEVOPS_PASSWORD }}
+          # Orchestration Tool Id
+          tool-id: ${{ secrets.SN_ORCHESTRATION_TOOL_ID }}
+          # Github Context
+          context-github: ${{ toJSON(github) }}
+          # Display Name of the Job
+          job-name: 'Sonar Scan'
+          # Sonar Host URL
+          sonar-host-url: ${{ secrets.SONAR_URL }}
+          # Sonar Project Key
+          sonar-project-key: ${{ secrets.SONAR_PROJECT_KEY }}
 
-     build7:
-        name: 'Build7'
-        runs-on: ubuntu-latest
-        steps:           
-            - uses: actions/checkout@v2
-              with:
-                  fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of analysis
-            
-            - name: Set up JDK 11
-              uses: actions/setup-java@v1
-              with:
-                  java-version: 11
-            
-            - name: Cache SonarCloud packages
-              uses: actions/cache@v1
-              with:
-                  path: ~/.sonar/cache
-                  key: ${{ runner.os }}-sonar
-                  restore-keys: ${{ runner.os }}-sonar
-            
-            - name: Cache Maven packages
-              uses: actions/cache@v1
-              with:
-                  path: ~/.m2
-                  key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
-                  restore-keys: ${{ runner.os }}-m2
+  securityScan:
+    name: 'Security Scan'
+    needs: sonarScan
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4.0.0
+      with:
+        # Repository name with owner. For example, actions/checkout
+        repository: # optional, default is ${{ github.repository }}
 
-     build8:
-        name: 'Build8'
-        runs-on: ubuntu-latest
-        steps:           
-            - uses: actions/checkout@v2
-              with:
-                  fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of analysis
-            
-            - name: Set up JDK 11
-              uses: actions/setup-java@v1
-              with:
-                  java-version: 11
-            
-            - name: Cache SonarCloud packages
-              uses: actions/cache@v1
-              with:
-                  path: ~/.sonar/cache
-                  key: ${{ runner.os }}-sonar
-                  restore-keys: ${{ runner.os }}-sonar
-            
-            - name: Cache Maven packages
-              uses: actions/cache@v1
-              with:
-                  path: ~/.m2
-                  key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
-                  restore-keys: ${{ runner.os }}-m2
+    # uncomment below lines of code to trigger a new Veracode scan
+    # - name: Veracode Upload And Scan
+    #   uses: veracode/veracode-uploadandscan-action@0.2.6
+    #   with:
+    #       appname: 'ServiceNow DevOps App#1'
+    #       createprofile: false
+    #       filepath: 'target/*.jar'
+    #       #version: ${{ github.run_id }}-${{ github.run_number }}-${{ github.run_attempt }}
+    #       vid: '${{ secrets.VERACODE_API_ID }}'
+    #       vkey: '${{ secrets.VERACODE_API_KEY }}'
+    #       #deleteincompletescan: 1
+    #       scantimeout: 20
 
-     build9:
-        name: 'Build9'
-        runs-on: ubuntu-latest
-        steps:           
-            - uses: actions/checkout@v2
-              with:
-                  fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of analysis
-            
-            - name: Set up JDK 11
-              uses: actions/setup-java@v1
-              with:
-                  java-version: 11
-            
-            - name: Cache SonarCloud packages
-              uses: actions/cache@v1
-              with:
-                  path: ~/.sonar/cache
-                  key: ${{ runner.os }}-sonar
-                  restore-keys: ${{ runner.os }}-sonar
-            
-            - name: Cache Maven packages
-              uses: actions/cache@v1
-              with:
-                  path: ~/.m2
-                  key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
-                  restore-keys: ${{ runner.os }}-m2
+    - name: ServiceNow DevOps Security Results
+      uses: ServiceNow/servicenow-devops-security-result@v2.0.0
+      with:
+          devops-integration-user-name: ${{ secrets.SN_DEVOPS_USER }}
+          devops-integration-user-password: ${{ secrets.SN_DEVOPS_PASSWORD }}
+          devops-integration-token: ${{ secrets.SN_DEVOPS_TOKEN }}
+          instance-url: ${{ secrets.SN_INSTANCE_URL }}
+          tool-id: ${{ secrets.SN_ORCHESTRATION_TOOL_ID }}
+          context-github: ${{ toJSON(github) }}
+          job-name: 'Security Scan'
+          security-result-attributes: '{ "scanner": "${{ secrets.SCANNER_NAME }}", "applicationName": "${{ secrets.VULNERABILITY_APPLICATION_NAME }}", "securityToolId": "8b1cc9ad87d1b11067b2caa5cebb3557" }'
 
-     build10:
-        name: 'Build10'
-        runs-on: ubuntu-latest
-        steps:           
-            - uses: actions/checkout@v2
-              with:
-                  fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of analysis
-            
-            - name: Set up JDK 11
-              uses: actions/setup-java@v1
-              with:
-                  java-version: 11
-            
-            - name: Cache SonarCloud packages
-              uses: actions/cache@v1
-              with:
-                  path: ~/.sonar/cache
-                  key: ${{ runner.os }}-sonar
-                  restore-keys: ${{ runner.os }}-sonar
-            
-            - name: Cache Maven packages
-              uses: actions/cache@v1
-              with:
-                  path: ~/.m2
-                  key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
-                  restore-keys: ${{ runner.os }}-m2
+  registerPackage:
+    name: 'Register Package'
+    needs: securityScan
+    runs-on: ubuntu-latest
+    steps:
+    - name: ServiceNow DevOps Register Package
+    # You may pin to the exact commit or the version.           
+      uses: ServiceNow/servicenow-devops-register-package@v2.0.0
+      with:
+          # ServiceNow Devops Integration User Name
+          devops-integration-user-name: ${{ secrets.SN_DEVOPS_USER }}
+          # ServiceNow Devops Integration User Password
+          devops-integration-user-password: ${{ secrets.SN_DEVOPS_PASSWORD }}
+          # ServiceNow Instance URL
+          instance-url: ${{ secrets.SN_INSTANCE_URL }}
+          # Orchestration Tool Id of the tool created in ServiceNow
+          tool-id: ${{ secrets.SN_ORCHESTRATION_TOOL_ID }}
+          # Github Context
+          context-github: ${{ toJSON(github) }}
+          # List of Artifacts in JSON format
+          artifacts: '[
+              {
+                  "name": "app-devops.jar",
+                  "version": "1.${{ github.run_number }}",
+                  "semanticVersion": "1.${{ github.run_number }}.0",
+                  "repositoryName": "${{ github.repository }}"
+              }
+          ]'
+          # Name of the Package that contains list of artifacts
+          package-name: 'app-devops-change-velocity.war'
+          # Display Name of Job
+          job-name: 'Register Package'
 
-     build11:
-        name: 'Build11'
-        runs-on: ubuntu-latest
-        steps:           
-            - uses: actions/checkout@v2
-              with:
-                  fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of analysis
-            
-            - name: Set up JDK 11
-              uses: actions/setup-java@v1
-              with:
-                  java-version: 11
-            
-            - name: Cache SonarCloud packages
-              uses: actions/cache@v1
-              with:
-                  path: ~/.sonar/cache
-                  key: ${{ runner.os }}-sonar
-                  restore-keys: ${{ runner.os }}-sonar
-            
-            - name: Cache Maven packages
-              uses: actions/cache@v1
-              with:
-                  path: ~/.m2
-                  key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
-                  restore-keys: ${{ runner.os }}-m2
+  change:
+    name: 'Change'
+    needs: registerPackage
+    runs-on: ubuntu-latest
+    steps:     
+    - name: ServiceNow DevOps Change Automation
+    # You may pin to the exact commit or the version.            
+      uses: ServiceNow/servicenow-devops-change@v2.0.0
+      with:
+          # ServiceNow Instance URL
+          instance-url: ${{ secrets.SN_INSTANCE_URL }}
+          # Devops Integration User Name
+          devops-integration-user-name: ${{ secrets.SN_DEVOPS_USER }}
+          # Devops Integration User Password
+          devops-integration-user-password: ${{ secrets.SN_DEVOPS_PASSWORD }}
+          # Orchestration Tool Id
+          tool-id: ${{ secrets.SN_ORCHESTRATION_TOOL_ID }}
+          # Display Name of the Job
+          job-name: 'Change'
+          # Github Context
+          context-github: ${{ toJSON(github) }}
+          # The max. time in seconds to wait until the action should fail.
+          timeout: 3600 # optional, default is 3600
+          # The time in seconds to wait between trying the API.
+          interval: 100 # optional, default is 100
+          # The customized inputs to create change with the requested details.
+          changeCreationTimeOut: 3600
+          abortOnChangeCreationFailure: 'false'
+          abortOnChangeStepTimeout: 'false'
+          change-request: '{
+            "attributes": {
+              "requested_by": {
+                "name": "DevOps System"
+              },
+              "assignment_group": {
+              "name": "Change Management"
+              },
+              "priority": "2",
+              "comments": "This is a sample pipeline script to be added in your change step",
+              "work_notes": "Update this to work_notes",
+              "start_date": "2023-09-07 11:59:59",
+              "end_date": "2023-09-09 11:59:59"
+            }
+          }'
+          
+  # uncomment below lines of code to create change request using deployment gates, indent code if necessary
+  #         deployment-gate: '{"environment":"prod", "jobId":"deploy", "jobName":"Deploy"}'
+  # deploy:
+  #   name: 'Deploy'
+  #   needs: change
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #   - name: Run deployment scripts
+  #     run: echo 'Deployment step in progress...'
 
-     build12:
-        name: 'Build12'
-        runs-on: ubuntu-latest
-        steps:           
-            - uses: actions/checkout@v2
-              with:
-                  fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of analysis
-            
-            - name: Set up JDK 11
-              uses: actions/setup-java@v1
-              with:
-                  java-version: 11
-            
-            - name: Cache SonarCloud packages
-              uses: actions/cache@v1
-              with:
-                  path: ~/.sonar/cache
-                  key: ${{ runner.os }}-sonar
-                  restore-keys: ${{ runner.os }}-sonar
-            
-            - name: Cache Maven packages
-              uses: actions/cache@v1
-              with:
-                  path: ~/.m2
-                  key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
-                  restore-keys: ${{ runner.os }}-m2
-
-     build13:
-        name: 'Build13'
-        runs-on: ubuntu-latest
-        steps:           
-            - uses: actions/checkout@v2
-              with:
-                  fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of analysis
-            
-            - name: Set up JDK 11
-              uses: actions/setup-java@v1
-              with:
-                  java-version: 11
-            
-            - name: Cache SonarCloud packages
-              uses: actions/cache@v1
-              with:
-                  path: ~/.sonar/cache
-                  key: ${{ runner.os }}-sonar
-                  restore-keys: ${{ runner.os }}-sonar
-            
-            - name: Cache Maven packages
-              uses: actions/cache@v1
-              with:
-                  path: ~/.m2
-                  key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
-                  restore-keys: ${{ runner.os }}-m2
-
-     build14:
-        name: 'Build14'
-        runs-on: ubuntu-latest
-        steps:           
-            - uses: actions/checkout@v2
-              with:
-                  fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of analysis
-            
-            - name: Set up JDK 11
-              uses: actions/setup-java@v1
-              with:
-                  java-version: 11
-            
-            - name: Cache SonarCloud packages
-              uses: actions/cache@v1
-              with:
-                  path: ~/.sonar/cache
-                  key: ${{ runner.os }}-sonar
-                  restore-keys: ${{ runner.os }}-sonar
-            
-            - name: Cache Maven packages
-              uses: actions/cache@v1
-              with:
-                  path: ~/.m2
-                  key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
-                  restore-keys: ${{ runner.os }}-m2
-
-     build15:
-        name: 'Build15'
-        runs-on: ubuntu-latest
-        steps:           
-            - uses: actions/checkout@v2
-              with:
-                  fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of analysis
-            
-            - name: Set up JDK 11
-              uses: actions/setup-java@v1
-              with:
-                  java-version: 11
-            
-            - name: Cache SonarCloud packages
-              uses: actions/cache@v1
-              with:
-                  path: ~/.sonar/cache
-                  key: ${{ runner.os }}-sonar
-                  restore-keys: ${{ runner.os }}-sonar
-            
-            - name: Cache Maven packages
-              uses: actions/cache@v1
-              with:
-                  path: ~/.m2
-                  key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
-                  restore-keys: ${{ runner.os }}-m2
-
-     build16:
-        name: 'Build16'
-        runs-on: ubuntu-latest
-        steps:           
-            - uses: actions/checkout@v2
-              with:
-                  fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of analysis
-            
-            - name: Set up JDK 11
-              uses: actions/setup-java@v1
-              with:
-                  java-version: 11
-            
-            - name: Cache SonarCloud packages
-              uses: actions/cache@v1
-              with:
-                  path: ~/.sonar/cache
-                  key: ${{ runner.os }}-sonar
-                  restore-keys: ${{ runner.os }}-sonar
-            
-            - name: Cache Maven packages
-              uses: actions/cache@v1
-              with:
-                  path: ~/.m2
-                  key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
-                  restore-keys: ${{ runner.os }}-m2
-
-     build17:
-        name: 'Build17'
-        runs-on: ubuntu-latest
-        steps:           
-            - uses: actions/checkout@v2
-              with:
-                  fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of analysis
-            
-            - name: Set up JDK 11
-              uses: actions/setup-java@v1
-              with:
-                  java-version: 11
-            
-            - name: Cache SonarCloud packages
-              uses: actions/cache@v1
-              with:
-                  path: ~/.sonar/cache
-                  key: ${{ runner.os }}-sonar
-                  restore-keys: ${{ runner.os }}-sonar
-            
-            - name: Cache Maven packages
-              uses: actions/cache@v1
-              with:
-                  path: ~/.m2
-                  key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
-                  restore-keys: ${{ runner.os }}-m2
-
-     build18:
-        name: 'Build18'
-        runs-on: ubuntu-latest
-        steps:           
-            - uses: actions/checkout@v2
-              with:
-                  fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of analysis
-            
-            - name: Set up JDK 11
-              uses: actions/setup-java@v1
-              with:
-                  java-version: 11
-            
-            - name: Cache SonarCloud packages
-              uses: actions/cache@v1
-              with:
-                  path: ~/.sonar/cache
-                  key: ${{ runner.os }}-sonar
-                  restore-keys: ${{ runner.os }}-sonar
-            
-            - name: Cache Maven packages
-              uses: actions/cache@v1
-              with:
-                  path: ~/.m2
-                  key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
-                  restore-keys: ${{ runner.os }}-m2
-
-     build19:
-        name: 'Build19'
-        runs-on: ubuntu-latest
-        steps:           
-            - uses: actions/checkout@v2
-              with:
-                  fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of analysis
-            
-            - name: Set up JDK 11
-              uses: actions/setup-java@v1
-              with:
-                  java-version: 11
-            
-            - name: Cache SonarCloud packages
-              uses: actions/cache@v1
-              with:
-                  path: ~/.sonar/cache
-                  key: ${{ runner.os }}-sonar
-                  restore-keys: ${{ runner.os }}-sonar
-            
-            - name: Cache Maven packages
-              uses: actions/cache@v1
-              with:
-                  path: ~/.m2
-                  key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
-                  restore-keys: ${{ runner.os }}-m2
-
-     build20:
-        name: 'Build20'
-        runs-on: ubuntu-latest
-        steps:           
-            - uses: actions/checkout@v2
-              with:
-                  fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of analysis
-            
-            - name: Set up JDK 11
-              uses: actions/setup-java@v1
-              with:
-                  java-version: 11
-            
-            - name: Cache SonarCloud packages
-              uses: actions/cache@v1
-              with:
-                  path: ~/.sonar/cache
-                  key: ${{ runner.os }}-sonar
-                  restore-keys: ${{ runner.os }}-sonar
-            
-            - name: Cache Maven packages
-              uses: actions/cache@v1
-              with:
-                  path: ~/.m2
-                  key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
-                  restore-keys: ${{ runner.os }}-m2
-
-                   
+  deploy:
+    name: 'Deploy'
+    needs: change
+    runs-on: ubuntu-latest
+    steps:
+    - name: Run deployment scripts
+      run: echo 'Deployment step in progress...'
