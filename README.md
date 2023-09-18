@@ -1,4 +1,4 @@
-### Tic-Tac Game
+##### Tic-Tac Game
 How to run Local
 
 Clone the repository
